@@ -28,7 +28,7 @@ contract MyToken is ERC20 {
         _;
     }
 
-    constructor(address[] memory initialOwners, uint256 _requiredApprovals) ERC20("Fefe42", "F42") {
+    constructor(address[] memory initialOwners, uint256 _requiredApprovals) ERC20("FefeBonus42", "FB42") {
         require(initialOwners.length > 0, "Owners required");
         require(_requiredApprovals > 0 && _requiredApprovals <= initialOwners.length, "Invalid approvals");
 
