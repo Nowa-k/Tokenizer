@@ -7,35 +7,35 @@
 - Reseau cible : Ethereum Sepolia (testnet)
 
 ## Prerequis
-- Navigateur avec [MetaMask](https://metamask.io/) configure sur le reseau **Sepolia**
-- Quelques ETH de test pour payer le gas (faucets Sepolia).
-- [Remix](https://remix.ethereum.org) ouvert.
-
-## Recuperer le contrat dans Remix
-1) Dans Remix > `File Explorer` > `Load a local file` et importer `code/Fefe42mandatory.sol` depuis ce depot 
+-   Remix.ide
+-   Metamask
+## Ajouter le contract dans Remix
+Dans Remix > `File Explorer` > `Load a local file` et importer `code/Fefe42mandatory.sol`
 
 ## Compilation
 1) Onglet **Solidity Compiler**
-2) **Compile Fefe42.sol**.  
+2) **Compile Fefe42mandatory.sol**.  
 
-## Deploiement sur Sepolia
+## 1er déploiement sur Sepolia
 1) Onglet **Deploy & Run**  
-2) Environnement : `Injected Provider - MetaMask` (Remix va utiliser le compte Sepolia actif).  
+2) Environnement : `Injected Provider - MetaMask` | `Sepolia - MetaMask`
 3) Contrat cible : `MyToken - Fefe42mandatory.sol`.
-4) Cliquer **Deploy** puis signer dans MetaMask.  
-5) Une fois mintee, copier l adresse du contrat (`Deployed Contracts` > copier l adresse).
+4) Cliquer **Deploy & Verify** puis signer dans MetaMask.  
+
+## Verifier sur un explorateur
+- Ouvrir [Sepolia Etherscan](https://sepolia.etherscan.io) et rechercher l adresse du contrat.
 
 ## Ajouter le token dans MetaMask
 1) Dans MetaMask > `Import tokens`  
 2) Coller l adresse du contrat, symbole `F42`, decimales `18`.  
 3) Le solde doit afficher **1000 F42** sur le compte deployeur.
 
-## Verifier sur un explorateur
-- Ouvrir [Sepolia Etherscan](https://sepolia.etherscan.io) et rechercher l adresse du contrat.
+## Si le contract existe déjà
+1) Remplir **At address** avec l'adresse du contract 
 
 ## Interagir apres deploiement
-- Transfert standard ERC20 via MetaMask ou Etherscan (`transfer`).
-- Frapper plus de tokens : fonction `mint(address to, uint256 amount)` depuis Remix/Etherscan, uniquement par le proprietaire.
+- 
+- 
 
 ## Infos utiles
 - Source principale : `code/Fefe42mandatory.sol`

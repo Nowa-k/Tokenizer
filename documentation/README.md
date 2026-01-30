@@ -1,6 +1,6 @@
 ### TOKENIZER
 
-What is this ?
+Qu'est ce que c'est ?
 
 ## Glossary
 
@@ -20,9 +20,17 @@ Programme autonome déployé sur la blockchain qui exécute automatiquement des 
 
 Réseau blockchain développé par Binance, conçu pour héberger des applications décentralisées et des tokens. Elle est rapide, peu coûteuse et compatible avec la machine virtuelle d’Ethereum (EVM).
 
+🧪 Sepolia
+
+Réseau de test (testnet) d’Ethereum utilisé pour déployer et tester des smart contracts sans utiliser de vrais fonds.
+
 🪙 BEP-20
 
-Norme de création de tokens sur la BNB Smart Chain (similaire à ERC-20 sur Ethereum). Elle définit les règles de base qu’un token doit respecter pour être compatible avec le réseau.
+Norme de création de tokens sur la BNB Smart Chain. Elle définit les règles de base qu’un token doit respecter pour être compatible avec le réseau.
+
+🪙 ERC-20
+
+Norme de création de tokens sur Ethereum. Elle définit un ensemble de fonctions et d’événements standard pour rendre les tokens interopérables avec les wallets et applications.
 
 🔐 Multisig (Multi-signature)
 
@@ -36,7 +44,3 @@ Adresse unique d’un contrat déployé sur la blockchain. Elle permet d’inter
 https://www.cnil.fr/fr/definition/blockchain
 https://www.coinhouse.com/fr/academie/blockchain/token
 https://bpifrance-creation.fr/encyclopedie/gerer-lentreprise/gestion-commerciale-administrative-documentaire/smart-contracts
-
-# Fetch gas
-
-Each IP and wallet address gets one drip of BNB TestNet every 24 hours. Try again after October 28, 2025, 9:51:03 AM
