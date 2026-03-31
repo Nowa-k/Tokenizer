@@ -27,7 +27,7 @@ ou
 3) Contrat cible : `MyToken - Fefe42bonus.sol`.
 4) Renseigner dans constructeur :
    - `initialOwners` : tableau d'adresses entre crochets, ex `[0xOwner1, 0xOwner2]`
-   ["0x880D30896Cb0C5c4F0f792624684993BDEb7eC25","0xb394D4e101B506057D1Ee116B240c5d57f2AcA92"]
+   ["0xb394D4e101B506057D1Ee116B240c5d57f2AcA92", "0x880D30896Cb0C5c4F0f792624684993BDEb7eC25"]
    - `requiredApprovals` : le seuil d'approbation (>=1 et <= nombre d'owners), ex `2`.
 5) Cliquer **Deploy** puis signer dans MetaMask
 6) Recuperer l'adresse du contrat `0x833315E2CdbFfCdB100d1e7D255e88F231797B9f`

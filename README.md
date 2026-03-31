@@ -1,4 +1,4 @@
-# Moon Token (Tokenizer)
+# Mon Token (Tokenizer)
 
 ## But du projet
 Construire et déployer un token sur la blockchain. Pour comprendre le cycle complet : écriture du smart contract, compilation, déploiement et utilisation.
