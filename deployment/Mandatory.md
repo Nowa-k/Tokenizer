@@ -23,7 +23,7 @@ ou
 ## Déploiement sur Sepolia
 1) Aller dans l´onglet **Deploy & Run**  
 2) Choisir l'environnement `Browser extension` : `Sepolia - MetaMask`
-3) Contrat cible : `MyToken - Fefe42mandatory.sol`.
+3) Contrat cible : `Fefe42 - Fefe42mandatory.sol`.
 4) Cliquer **Deploy & Verify** puis signer dans MetaMask.  
 
 ## Verifier sur un explorateur

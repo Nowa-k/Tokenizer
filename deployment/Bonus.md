@@ -1,52 +1,51 @@
-# Fefe42 (bonus) – deploiement et preuve de la multisig
+# Fefe42 (bonus) - extension multisig du mint
 
-## Apercu rapide
-- Contrat ERC20 `FefeBonus42` (`FB42`)
-- Offre initiale : 1000 FB42 frappes pour le deployeur (il doit faire partie des owners).
-- Multisig : liste d'adresses owners + seuil `requiredApprovals` pour valider un mint.
-- Source à utiliser : `code/Fefe42bonus.sol`.
+## Objectif du bonus
+Le bonus est une adaptation du mandatory:
+- Le token reste celui du mandatory: `Fefe42` (`F42`) dans `code/Fefe42mandatory.sol`.
+- Le bonus ajoute un contrat separé de gouvernance (`code/Fefe42bonus.sol`) qui impose plusieurs signatures pour autoriser `mint`.
+- Le mint n'est plus controle par une seule clef apres transfert d'ownership.
 
-## Prerequis
-- Remix.ide
-- Metamask
-- Adresses des owners (incluant le compte deployeur) et choix du seuil d'approbation.
+## Architecture
+- Contrat 1: `Fefe42` (mandatory), ERC20 + `Ownable`.
+- Contrat 2: `Fefe42MintMultisig` (bonus), qui orchestre les demandes de mint:
+  - `proposeMintTokens(to, tokens)` ou `proposeMintUnits(to, amountUnits)`
+  - `approveMint(requestId)`
+  - execution automatique quand `approvals >= requiredApprovals`
+
 
 ## Import et compilation
-Dans Remix > `File Explorer` <: 
-- Importer `code/Fefe42bonus.sol`
-ou
-- Crée un fichier dans contracts copié/collé le fichier `code/Fefe42mandatory.sol`  
+- `code/Fefe42bonus.sol`
 
-## Compilation
-1) Dans l'onglet **Solidity Compiler**
-2) **Compile Fefe42bonus.sol**
+## Deploiement sur Sepolia
+1) Dans **Deploy & Run**, environnement `Injected Provider - MetaMask`.
+2) Deployer `Fefe42 - Fefe42mandatory.sol`.
+3) Noter l'adresse du token (`tokenAddress`).
+4) Deployer `Fefe42MintMultisig - Fefe42bonusv2.sol` avec:
+- `tokenAddress`: adresse du `Fefe42` deja deploye
+- `initialOwners`: tableau d'adresses unique, ex:
+`[0xOwnerA, 0xOwnerB, 0xOwnerC]`
+- `_requiredApprovals`: ex `2`
+5) Noter l'adresse du multisig (`multisigAddress`).
+6) Sur `Fefe42`, appeler `transferOwnership(multisigAddress)` depuis l'owner actuel.
 
-## Déploiement sur Sepolia
-1) Aller dans l´onglet  **Deploy & Run**.
-2) Choisir l'environnement : `Injected Provider - MetaMask`.
-3) Contrat cible : `MyToken - Fefe42bonus.sol`.
-4) Renseigner dans constructeur :
-   - `initialOwners` : tableau d'adresses entre crochets, ex `[0xOwner1, 0xOwner2]`
-   ["0xb394D4e101B506057D1Ee116B240c5d57f2AcA92", "0x880D30896Cb0C5c4F0f792624684993BDEb7eC25"]
-   - `requiredApprovals` : le seuil d'approbation (>=1 et <= nombre d'owners), ex `2`.
-5) Cliquer **Deploy** puis signer dans MetaMask
-6) Recuperer l'adresse du contrat `0x833315E2CdbFfCdB100d1e7D255e88F231797B9f`
+## Verification obligatoire (preuve bonus)
+### 1) La config multisig est correcte
+Sur `Fefe42MintMultisig` (Read):
+- `getOwners()` renvoie les owners attendus
+- `requiredApprovals()` renvoie le seuil choisi
+- `isOwner(address)` confirme chaque owner
 
-## Prouver que la multisig existe
-- **Lire la config** : sur Remix (onglet `Deployed Contracts`) ou Etherscan > Read Contract :
-  - `getOwners()` renvoie la liste des owners enregistres.
-  - `requiredApprovals()` affiche le nombre de signatures necessaires.
-  - `isOwner(address)` permet de verifier un owner en particulier.
-- **Vérifier l'offre initiale au deployeur** : `balanceOf(deployerAddress)` doit retourner `1000 * 10^18`.
-- **Tester le multisig** :
-  1) Owner A appelle `proposeMint(to, amount)` et obtient un `requestId` (event `MintProposed`).
-  2) Tant que `approvals < requiredApprovals`, l'appel `approveMint(requestId)` par un autre owner est requis. Chaque signature emet `MintApproved`.
-  3) `MintExecuted` est lancé quand  `requiredApprovals` est bon.
-  4) Verifier avec `balanceOf(to)` que le mint a eu lieu uniquement après assez de signatures.
-- **Tracer les évenements** : sur Etherscan, onglet `Events`, montrer la suite `MintProposed` -> `MintApproved` -> `MintExecuted` pour prouver la coordination multisig.
+### 2) L'ownership du token a bien ete transferee
+Sur `Fefe42` (Read):
+- `owner()` doit etre `multisigAddress`
 
-## Ajouter le token dans MetaMask
-1) MetaMask > `Import tokens`.
-2) Coller l adresse du contrat, symbole `FB42`, decimales `18`.
-3) Le solde du deployeur doit afficher 1000 F42.
+### 3) Un mint direct ne marche plus
+- Tenter `mint(to, amount)` depuis un EOA owner historique sur `Fefe42`: revert attendu (car seul le multisig est owner).
 
+### 4) Le mint multisig fonctionne
+1) Owner A appelle `proposeMintTokens(to, tokens)`.
+2) Recuperer `requestId` via event `MintProposed`.
+3) Owner B (et autres si necessaire) appelle `approveMint(requestId)`.
+4) Quand le seuil est atteint, event `MintExecuted` emis.
+5) Verifier `balanceOf(to)` et `totalSupply()` sur `MyToken`.

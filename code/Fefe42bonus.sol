@@ -1,15 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v5.0.2/contracts/token/ERC20/ERC20.sol";
+interface IFefe42 {
+    // Appelle la fonction mint du token Fefe42 cible.
+    function mint(address to, uint256 amount) external;
+    // Recupere le nombre de decimales du token (normalement 18).
+    function decimals() external view returns (uint8);
+}
 
-contract FefeBonus is ERC20 {
+contract Fefe42MintMultisig {
     struct MintRequest {
         address to;
-        uint256 amount;      // montant en "unités ERC20" (donc déjà *10**decimals)
+        uint256 amount;
         uint256 approvals;
         bool executed;
     }
+
+    IFefe42 public immutable token;
 
     address[] public owners;
     mapping(address => bool) public isOwner;
@@ -19,20 +26,32 @@ contract FefeBonus is ERC20 {
     mapping(uint256 => MintRequest) public mintRequests;
     mapping(uint256 => mapping(address => bool)) public hasApproved;
 
-    event MintProposed(uint256 indexed requestId, address indexed proposer, address indexed to, uint256 amountUnits);
+    event MintProposed(
+        uint256 indexed requestId,
+        address indexed proposer,
+        address indexed to,
+        uint256 amountUnits
+    );
     event MintApproved(uint256 indexed requestId, address indexed owner, uint256 approvals);
     event MintExecuted(uint256 indexed requestId, address indexed to, uint256 amountUnits);
 
+    // Restreint l'appel aux adresses declarees comme owners multisig.
     modifier onlyOwner() {
         require(isOwner[msg.sender], "Not owner");
         _;
     }
 
-    constructor(address[] memory initialOwners, uint256 _requiredApprovals)
-        ERC20("FefeBonus42", "FB42")
-    {
-        require(initialOwners.length > 0, "Owners required");
-        require(_requiredApprovals > 0 && _requiredApprovals <= initialOwners.length, "Invalid approvals");
+    // Initialise le multisig: token cible, owners autorises et seuil de validation.
+    // Le seuil doit etre au minimum 2 et au maximum le nombre total d'owners.
+    constructor(address tokenAddress, address[] memory initialOwners, uint256 _requiredApprovals) {
+        require(tokenAddress != address(0), "Invalid token");
+        require(initialOwners.length >= 2, "At least 2 owners required");
+        require(
+            _requiredApprovals >= 2 && _requiredApprovals <= initialOwners.length,
+            "Invalid approvals"
+        );
+
+        token = IFefe42(tokenAddress);
 
         for (uint256 i = 0; i < initialOwners.length; i++) {
             address owner = initialOwners[i];
@@ -44,24 +63,34 @@ contract FefeBonus is ERC20 {
 
         require(isOwner[msg.sender], "Deployer must be owner");
         requiredApprovals = _requiredApprovals;
-
-        // ✅ 2000 tokens au deployeur
-        _mint(msg.sender, 2000 * 10 ** decimals());
     }
 
-    // ====== VERSION SIMPLE (tu donnes des TOKENS, pas des unités) ======
-    function proposeMintTokens(address to, uint256 tokens) external onlyOwner returns (uint256 requestId) {
+    // Cree une demande de mint en "tokens entiers" (ex: 10) puis convertit en units.
+    function proposeMintTokens(address to, uint256 tokens)
+        external
+        onlyOwner
+        returns (uint256 requestId)
+    {
         require(tokens > 0, "Tokens zero");
-        uint256 amountUnits = tokens * 10 ** decimals();
+        uint256 amountUnits = tokens * (10 ** uint256(token.decimals()));
         return _proposeMintUnits(to, amountUnits);
     }
 
-    // ====== VERSION "RAW" (tu donnes des unités ERC20 directement) ======
-    function proposeMintUnits(address to, uint256 amountUnits) external onlyOwner returns (uint256 requestId) {
+    // Cree une demande de mint directement en units (wei du token).
+    function proposeMintUnits(address to, uint256 amountUnits)
+        external
+        onlyOwner
+        returns (uint256 requestId)
+    {
         return _proposeMintUnits(to, amountUnits);
     }
 
-    function _proposeMintUnits(address to, uint256 amountUnits) internal returns (uint256 requestId) {
+    // Enregistre une nouvelle demande et compte l'approbation du proposeur (1/requiredApprovals).
+    // L'execution ne se fera qu'une fois le seuil atteint via approveMint(requestId).
+    function _proposeMintUnits(address to, uint256 amountUnits)
+        internal
+        returns (uint256 requestId)
+    {
         require(to != address(0), "Invalid to");
         require(amountUnits > 0, "Amount zero");
 
@@ -70,7 +99,7 @@ contract FefeBonus is ERC20 {
         MintRequest storage req = mintRequests[requestId];
         req.to = to;
         req.amount = amountUnits;
-        req.approvals = 1; // le proposeur approuve automatiquement
+        req.approvals = 1;
 
         hasApproved[requestId][msg.sender] = true;
 
@@ -82,6 +111,8 @@ contract FefeBonus is ERC20 {
         }
     }
 
+    // Ajoute l'approbation d'un owner sur une demande existante.
+    // Si le nombre d'approbations atteint le seuil, le mint est execute.
     function approveMint(uint256 requestId) external onlyOwner {
         MintRequest storage req = mintRequests[requestId];
         require(req.to != address(0), "Unknown request");
@@ -98,13 +129,18 @@ contract FefeBonus is ERC20 {
         }
     }
 
+    // Execute le mint une seule fois pour la demande.
+    // Le multisig doit etre owner du token pour que cet appel reussisse.
     function _executeMint(uint256 requestId, MintRequest storage req) internal {
         require(!req.executed, "Already executed");
         req.executed = true;
-        _mint(req.to, req.amount);
+
+        token.mint(req.to, req.amount);
+
         emit MintExecuted(requestId, req.to, req.amount);
     }
 
+    // Renvoie la liste complete des owners multisig.
     function getOwners() external view returns (address[] memory) {
         return owners;
     }
